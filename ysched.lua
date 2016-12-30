@@ -1,7 +1,7 @@
 -- optimization
 
 local os_clock = os.clock
-local no_args = {}
+local noargs = {}
 
 -- import hack
 
@@ -45,7 +45,7 @@ function spawn(_function)
     queue:push {
         ["coroutine"] = coroutine.create(_function),
         ["condition"] = false,
-        ["args"] = no_args,
+        ["args"] = noargs,
     }
 end
 
@@ -69,8 +69,8 @@ function wait(time)
 
     queue:push {
         ["coroutine"] = _coroutine,
-        ["args"] = no_args,
-        ["resumeAt"] = os_clock() + time,
+        ["args"] = noargs,
+        ["resumeat"] = os_clock() + time,
     }
 
     return coroutine.yield()
@@ -84,7 +84,7 @@ local function startscheduler()
         now = os_clock()
         step = queue:pop()
         assert(step, "No step means that something went horribly, horribly wrong")
-        if (not step.condition and not step.resumeAt) or (step.resumeAt and now >= step.resumeAt) or (step.condition and step.condition()) then
+        if (not step.condition and not step.resumeat) or (step.resumeat and now >= step.resumeat) or (step.condition and step.condition()) then
             coroutine.resume(step.coroutine, unpack(step.args))
         else
             queue:push(step, true)
