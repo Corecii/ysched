@@ -1,3 +1,8 @@
+-- optimization
+
+local os_clock = os.clock
+local no_args = {}
+
 -- import hack
 
 local oldrequire = require
@@ -20,7 +25,7 @@ end
 
 -- queue code 
 
-local    queue = {}
+local queue = {}
 
 function queue:push(task, back)
     if back then
@@ -40,11 +45,12 @@ function spawn(_function)
     queue:push {
         ["coroutine"] = coroutine.create(_function),
         ["condition"] = false,
+        ["args"] = no_args,
     }
 end
 
 function yield(condition, _function, ...) -- ... = args for _function 
-    local args       = ...
+    local args       = {...}
     local truth      = condition
     local running    = coroutine.running()
     local _coroutine = _function and coroutine.create(function(...) _function(...) coroutine.resume(running) end) or coroutine.running()
@@ -59,21 +65,29 @@ function yield(condition, _function, ...) -- ... = args for _function
 end
 
 function wait(time)
-    local dismissal = os.clock() + time
-    return yield(function() return dismissal <= os.clock() end)
+    local _coroutine = coroutine.running()
+
+    queue:push {
+        ["coroutine"] = _coroutine,
+        ["args"] = no_args,
+        ["resumeAt"] = os_clock() + time,
+    }
+
+    return coroutine.yield()
 end
 
 --starts scheduling code
 
 local function startscheduler()
+    local now, step
     repeat
-        local step = queue:pop()
-        if step then
-            if not step.condition or step.condition() then
-                coroutine.resume(step.coroutine, step.args)
-            else
-                queue:push(step, true)
-            end
+        now = os_clock()
+        step = queue:pop()
+        assert(step, "No step means that something went horribly, horribly wrong")
+        if (not step.condition and not step.resumeAt) or (step.resumeAt and now >= step.resumeAt) or (step.condition and step.condition()) then
+            coroutine.resume(step.coroutine, unpack(step.args))
+        else
+            queue:push(step, true)
         end
     until #queue    == 0
     debug.traceback = nil -- remove stacktrace from error in vanilla lua 
