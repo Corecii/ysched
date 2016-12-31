@@ -39,7 +39,7 @@ end
 -- queue code 
 local queuefirst = {
     {
-        coroutine = coroutine_create(_function)
+        coroutine = coroutine_create(target)
     }
 }
 local queuelast = queuefirst
