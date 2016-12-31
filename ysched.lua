@@ -37,10 +37,13 @@ else
 end
 
 -- queue code 
-local queue = {
+local waitqueue = {
     {
         coroutine = coroutine_create(_function)
     }
+}
+local conditionqueue = {
+    
 }
 
 -- scheduler apis 
@@ -73,7 +76,9 @@ local now, step
 repeat
     now = os_clock()
     step = table_remove(queue, 1)
-    if (not step.condition and not step.resumeat) or (step.resumeat and now >= step.resumeat) or (step.condition and step.condition()) then
+    if (not step.condition and not step.resumeat)
+    or (step.resumeat and now >= step.resumeat)
+    or (step.condition and step.condition()) then
         coroutine_resume(step.coroutine, unpack(step))
     else
         queue[#queue + 1] = step
