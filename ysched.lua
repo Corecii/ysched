@@ -37,49 +37,54 @@ else
 end
 
 -- queue code 
-local queue = {
+local queuefirst = {
     {
         coroutine = coroutine_create(_function)
     }
 }
+local queuelast = queuefirst
 
 -- scheduler apis 
 function spawn(_function)
-    table_insert(queue, 1, {
-        coroutine = coroutine_create(_function)
-    })
+    queuefirst = {
+        coroutine = coroutine_create(_function),
+        next = queuefirst
+    }
 end
 
 function yield(condition, _function, ...)  -- ... = args for _function
     local running = coroutine_running()
-    table_insert(queue, 1, {
+    queuefirst = {
         coroutine = _function and coroutine_create(function(...) _function(...) coroutine_resume(running) end) or running,
         condition = condition,
-        ...
-    })
+        ...,
+        next = queuefirst
+    }
     return coroutine_yield()
 end
 
 function wait(time)
-    table_insert(queue, 1, {
+    queuefirst = {
         coroutine = coroutine_running(),
-        resumeat = os_clock() + time
-    })
+        resumeat = os_clock() + time,
+        next = queuefirst
+    }
     return coroutine_yield()
 end
 
 -- start scheduler
-local now, step
+local now
 repeat
     now = os_clock()
-    step = table_remove(queue, 1)
-    if (not step.condition and not step.resumeat)
-    or (step.resumeat and now >= step.resumeat)
-    or (step.condition and step.condition()) then
-        coroutine_resume(step.coroutine, unpack(step))
-    else
-        queue[#queue + 1] = step
+    if (not queuefirst.condition and not queuefirst.resumeat)
+    or (queuefirst.resumeat and now >= queuefirst.resumeat)
+    or (queuefirst.condition and queuefirst.condition()) then
+        coroutine_resume(queuefirst.coroutine, unpack(queuefirst))
+        queuefirst = queuefirst.next
+    elseif queuefirst ~= queuelast then
+        queuelast.next, queuelast, queuefirst.next = queuefirst, queuefirst, nil
+        queuefirst = queuefirst.next
     end
-until #queue    == 0
+until not queuefirst
 debug.traceback = nil -- remove stacktrace from error in vanilla lua 
 error "[SCHEDULER] Execution complete." -- prevent script from running again when required. (side effect of require hack)
