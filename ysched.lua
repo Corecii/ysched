@@ -57,8 +57,8 @@ function yield(condition, _function, ...)  -- ... = args for _function
     queuefirst = {
         coroutine = _function and coroutine_create(function(...) _function(...) coroutine_resume(running) end) or running,
         condition = condition,
-        ...,
-        next = queuefirst
+        next = queuefirst,
+        ...
     }
     return coroutine_yield()
 end
