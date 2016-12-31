@@ -53,7 +53,7 @@ end
 function yield(condition, _function, ...)  -- ... = args for _function
     local running = coroutine_running()
     table_insert(queue, 1, {
-        coroutine = _function and coroutine.create(function(...) _function(...) coroutine_resume(running) end) or running,
+        coroutine = _function and coroutine_create(function(...) _function(...) coroutine_resume(running) end) or running,
         condition = condition,
         ...
     })
