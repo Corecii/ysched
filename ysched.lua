@@ -82,8 +82,7 @@ repeat
         coroutine_resume(queuefirst.coroutine, unpack(queuefirst))
         queuefirst = queuefirst.next
     elseif queuefirst ~= queuelast then
-        queuelast.next, queuelast, queuefirst.next = queuefirst, queuefirst, nil
-        queuefirst = queuefirst.next
+        queuelast.next, queuelast, queuefirst, queuefirst.next = queuefirst, queuefirst, queuefirst.next, nil
     end
 until not queuefirst
 debug.traceback = nil -- remove stacktrace from error in vanilla lua 
