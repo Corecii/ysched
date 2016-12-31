@@ -73,7 +73,7 @@ local now, step
 repeat
     now = os_clock()
     step = table_remove(queue, 1)
-    if (not step.condition and not step.resumeAt) or (step.resumeAt and now >= step.resumeAt) or (step.condition and step.condition()) then
+    if (not step.condition and not step.resumeat) or (step.resumeat and now >= step.resumeat) or (step.condition and step.condition()) then
         coroutine_resume(step.coroutine, unpack(step))
     else
         queue[#queue + 1] = step
