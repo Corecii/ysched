@@ -42,7 +42,6 @@ local queue = {
         coroutine = coroutine_create(_function)
     }
 }
-}
 
 -- scheduler apis 
 function spawn(_function)
