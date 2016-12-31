@@ -37,13 +37,11 @@ else
 end
 
 -- queue code 
-local waitqueue = {
+local queue = {
     {
         coroutine = coroutine_create(_function)
     }
 }
-local conditionqueue = {
-    
 }
 
 -- scheduler apis 
